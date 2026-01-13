@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Powergen Solar</string>
+    <string name="accessibility_service_description">Detects WhatsApp calls to enable call recording. This service only monitors WhatsApp to detect when calls start and end.</string>
+</resources>
