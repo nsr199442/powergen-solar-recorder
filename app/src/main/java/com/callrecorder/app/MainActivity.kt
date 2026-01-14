@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         
         // Check if setup is completed
-        if (!SetupActivity.isSetupCompleted(this)) {
+        if (!SetupActivity.isSetupComplete(this)) {
             val intent = Intent(this, SetupActivity::class.java)
             startActivity(intent)
             finish()
@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Server Configuration")
             .setMessage("Current Server:\n$serverUrl\n\nWould you like to change the server settings?")
             .setPositiveButton("Change") { _, _ ->
-                SetupActivity.clearSetup(this)
+                SetupActivity.resetSetup(this)
                 val intent = Intent(this, SetupActivity::class.java)
                 startActivity(intent)
                 finish()
