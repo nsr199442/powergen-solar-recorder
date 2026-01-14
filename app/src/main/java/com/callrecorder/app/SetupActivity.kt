@@ -3,169 +3,193 @@ package com.callrecorder.app
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.callrecorder.app.databinding.ActivitySetupBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
 import java.net.URL
 
 class SetupActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivitySetupBinding
+    private lateinit var agentNameInput: EditText
+    private lateinit var serverIpInput: EditText
+    private lateinit var serverPortInput: EditText
+    private lateinit var testConnectionButton: Button
+    private lateinit var saveButton: Button
 
     companion object {
         private const val PREFS_NAME = "PowergenSolarPrefs"
+        private const val KEY_AGENT_NAME = "agent_name"
         private const val KEY_SERVER_IP = "server_ip"
         private const val KEY_SERVER_PORT = "server_port"
-        private const val KEY_SETUP_COMPLETED = "setup_completed"
+        private const val KEY_SETUP_COMPLETE = "setup_complete"
 
-        fun isSetupCompleted(context: Context): Boolean {
+        fun isSetupComplete(context: Context): Boolean {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            return prefs.getBoolean(KEY_SETUP_COMPLETED, false)
+            return prefs.getBoolean(KEY_SETUP_COMPLETE, false)
+        }
+
+        fun getAgentName(context: Context): String {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getString(KEY_AGENT_NAME, "") ?: ""
         }
 
         fun getServerUrl(context: Context): String {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val ip = prefs.getString(KEY_SERVER_IP, "")
-            val port = prefs.getString(KEY_SERVER_PORT, "3500")
-            return if (ip.isNullOrEmpty()) {
-                "" // Will fail uploads if not configured
-            } else {
+            val ip = prefs.getString(KEY_SERVER_IP, "") ?: ""
+            val port = prefs.getString(KEY_SERVER_PORT, "") ?: ""
+            
+            return if (ip.isNotEmpty() && port.isNotEmpty()) {
                 "http://$ip:$port"
+            } else {
+                ""
             }
         }
 
-        fun clearSetup(context: Context) {
+        fun resetSetup(context: Context) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit().clear().apply()
+            prefs.edit().putBoolean(KEY_SETUP_COMPLETE, false).apply()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySetupBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_setup)
 
-        setupUI()
-    }
+        agentNameInput = findViewById(R.id.agentNameInput)
+        serverIpInput = findViewById(R.id.serverIpInput)
+        serverPortInput = findViewById(R.id.serverPortInput)
+        testConnectionButton = findViewById(R.id.testConnectionButton)
+        saveButton = findViewById(R.id.saveButton)
 
-    private fun setupUI() {
-        binding.tvWelcome.text = "Welcome to Powergen Solar\nCall Recording System"
-        
-        // Pre-fill with example
-        binding.etServerIp.hint = "Example: 184.174.37.99"
-        binding.etServerPort.setText("3500")
+        // Load saved values if any
+        loadSavedValues()
 
-        binding.btnTestConnection.setOnClickListener {
+        testConnectionButton.setOnClickListener {
             testConnection()
         }
 
-        binding.btnSave.setOnClickListener {
+        saveButton.setOnClickListener {
             saveConfiguration()
         }
     }
 
+    private fun loadSavedValues() {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        agentNameInput.setText(prefs.getString(KEY_AGENT_NAME, ""))
+        serverIpInput.setText(prefs.getString(KEY_SERVER_IP, ""))
+        serverPortInput.setText(prefs.getString(KEY_SERVER_PORT, ""))
+    }
+
     private fun testConnection() {
-        val ip = binding.etServerIp.text.toString().trim()
-        val port = binding.etServerPort.text.toString().trim()
+        val agentName = agentNameInput.text.toString().trim()
+        val ip = serverIpInput.text.toString().trim()
+        val port = serverPortInput.text.toString().trim()
 
-        if (ip.isEmpty()) {
-            Toast.makeText(this, "Please enter server IP address", Toast.LENGTH_SHORT).show()
+        if (agentName.isEmpty()) {
+            Toast.makeText(this, "Please enter your name", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (port.isEmpty()) {
-            Toast.makeText(this, "Please enter server port", Toast.LENGTH_SHORT).show()
+        if (ip.isEmpty() || port.isEmpty()) {
+            Toast.makeText(this, "Please enter server IP and port", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (!isValidIP(ip)) {
+        if (!isValidIpAddress(ip)) {
             Toast.makeText(this, "Invalid IP address format", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (!isValidPort(port)) {
-            Toast.makeText(this, "Invalid port number", Toast.LENGTH_SHORT).show()
-            return
-        }
+        testConnectionButton.isEnabled = false
+        testConnectionButton.text = "Testing..."
 
-        binding.btnTestConnection.isEnabled = false
-        binding.tvStatus.text = "Testing connection..."
-
-        // Test connection in background
-        Thread {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                val url = "http://$ip:$port/health"
-                val connection = URL(url).openConnection()
+                val url = URL("http://$ip:$port/health")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
                 connection.connectTimeout = 5000
                 connection.readTimeout = 5000
-                connection.connect()
-                
-                val response = connection.getInputStream().bufferedReader().readText()
-                
-                runOnUiThread {
-                    binding.tvStatus.text = "✓ Connection successful!"
-                    binding.tvStatus.setTextColor(getColor(android.R.color.holo_green_dark))
-                    Toast.makeText(this, "Server is reachable!", Toast.LENGTH_SHORT).show()
-                    binding.btnSave.isEnabled = true
+
+                val responseCode = connection.responseCode
+
+                withContext(Dispatchers.Main) {
+                    if (responseCode == 200) {
+                        Toast.makeText(
+                            this@SetupActivity,
+                            "✓ Connection successful!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            this@SetupActivity,
+                            "Connection failed: HTTP $responseCode",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    testConnectionButton.isEnabled = true
+                    testConnectionButton.text = "Test Connection"
                 }
-                
+
+                connection.disconnect()
+
             } catch (e: Exception) {
-                runOnUiThread {
-                    binding.tvStatus.text = "✗ Connection failed: ${e.message}"
-                    binding.tvStatus.setTextColor(getColor(android.R.color.holo_red_dark))
-                    Toast.makeText(this, "Cannot reach server. Check IP and port.", Toast.LENGTH_LONG).show()
-                    binding.btnSave.isEnabled = true // Allow saving even if test fails
-                }
-            } finally {
-                runOnUiThread {
-                    binding.btnTestConnection.isEnabled = true
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@SetupActivity,
+                        "Connection failed: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    testConnectionButton.isEnabled = true
+                    testConnectionButton.text = "Test Connection"
                 }
             }
-        }.start()
+        }
     }
 
     private fun saveConfiguration() {
-        val ip = binding.etServerIp.text.toString().trim()
-        val port = binding.etServerPort.text.toString().trim()
+        val agentName = agentNameInput.text.toString().trim()
+        val ip = serverIpInput.text.toString().trim()
+        val port = serverPortInput.text.toString().trim()
 
-        if (ip.isEmpty()) {
-            Toast.makeText(this, "Please enter server IP address", Toast.LENGTH_SHORT).show()
+        if (agentName.isEmpty()) {
+            Toast.makeText(this, "Please enter your name", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (port.isEmpty()) {
-            Toast.makeText(this, "Please enter server port", Toast.LENGTH_SHORT).show()
+        if (ip.isEmpty() || port.isEmpty()) {
+            Toast.makeText(this, "Please enter server IP and port", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (!isValidIP(ip)) {
+        if (!isValidIpAddress(ip)) {
             Toast.makeText(this, "Invalid IP address format", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (!isValidPort(port)) {
-            Toast.makeText(this, "Invalid port number", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Save to SharedPreferences
+        // Save configuration
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            putString(KEY_SERVER_IP, ip)
-            putString(KEY_SERVER_PORT, port)
-            putBoolean(KEY_SETUP_COMPLETED, true)
-            apply()
-        }
+        prefs.edit()
+            .putString(KEY_AGENT_NAME, agentName)
+            .putString(KEY_SERVER_IP, ip)
+            .putString(KEY_SERVER_PORT, port)
+            .putBoolean(KEY_SETUP_COMPLETE, true)
+            .apply()
 
         Toast.makeText(this, "Configuration saved!", Toast.LENGTH_SHORT).show()
 
-        // Go to MainActivity
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
+        // Navigate to MainActivity
+        startActivity(Intent(this, MainActivity::class.java))
         finish()
     }
 
-    private fun isValidIP(ip: String): Boolean {
+    private fun isValidIpAddress(ip: String): Boolean {
         val parts = ip.split(".")
         if (parts.size != 4) return false
         
@@ -177,19 +201,5 @@ class SetupActivity : AppCompatActivity() {
                 false
             }
         }
-    }
-
-    private fun isValidPort(port: String): Boolean {
-        return try {
-            val portNum = port.toInt()
-            portNum in 1..65535
-        } catch (e: NumberFormatException) {
-            false
-        }
-    }
-
-    override fun onBackPressed() {
-        // Prevent going back without setup
-        Toast.makeText(this, "Please complete the setup to continue", Toast.LENGTH_SHORT).show()
     }
 }

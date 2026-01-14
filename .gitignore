@@ -29,7 +29,8 @@ local.properties
 
 # Gradle files
 .gradle/
-gradle-wrapper.jar
+#gradle-wrapper.jar
+
 
 # Signing files
 .signing/

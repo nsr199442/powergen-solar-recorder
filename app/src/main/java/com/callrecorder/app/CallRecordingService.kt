@@ -143,7 +143,8 @@ class CallRecordingService : Service() {
 
     private fun generateFileName(metadata: CallMetadata): String {
         val cleanNumber = metadata.phoneNumber.replace(Regex("[^0-9+]"), "")
-        return "${cleanNumber}_${metadata.callType}_${metadata.direction}_${metadata.timestamp}.mp3"
+        val agentName = SetupActivity.getAgentName(this).replace(" ", "_").replace(Regex("[^a-zA-Z0-9_]"), "")
+        return "${agentName}_${cleanNumber}_${metadata.callType}_${metadata.direction}_${metadata.timestamp}.mp3"
     }
 
     private fun getCurrentTimestamp(): String {

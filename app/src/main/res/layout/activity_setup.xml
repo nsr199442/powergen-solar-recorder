@@ -1,131 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="#FFFFFF">
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center">
 
-    <LinearLayout
+    <ImageView
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@android:drawable/sym_def_app_icon"
+        android:layout_marginBottom="32dp"
+        android:contentDescription="App Logo" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Powergen Solar Call Recorder"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"
+        android:textColor="#000000" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Server Configuration"
+        android:textSize="16sp"
+        android:layout_marginBottom="24dp"
+        android:textColor="#666666" />
+
+    <!-- Agent Name Field -->
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:gravity="center_horizontal">
+        android:text="Agent Name"
+        android:textSize="14sp"
+        android:textColor="#000000"
+        android:layout_marginBottom="4dp" />
 
-        <!-- Logo/Title Area -->
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="16dp"
-            android:src="@android:drawable/sym_def_app_icon"
-            android:contentDescription="App Logo" />
+    <EditText
+        android:id="@+id/agentNameInput"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:hint="Enter your name (e.g., John)"
+        android:inputType="textPersonName"
+        android:padding="16dp"
+        android:background="@android:drawable/editbox_background"
+        android:textColor="#000000"
+        android:textColorHint="#999999"
+        android:layout_marginBottom="16dp" />
 
-        <TextView
-            android:id="@+id/tvWelcome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Welcome to Powergen Solar\nCall Recording System"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textAlignment="center"
-            android:layout_marginBottom="32dp"
-            android:textColor="#333333" />
+    <!-- Server IP Field -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Server IP Address"
+        android:textSize="14sp"
+        android:textColor="#000000"
+        android:layout_marginBottom="4dp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Server Configuration"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"
-            android:textColor="#666666" />
+    <EditText
+        android:id="@+id/serverIpInput"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:hint="e.g., 184.174.37.99"
+        android:inputType="text"
+        android:padding="16dp"
+        android:background="@android:drawable/editbox_background"
+        android:textColor="#000000"
+        android:textColorHint="#999999"
+        android:layout_marginBottom="16dp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Enter your VPS server details to enable call recording uploads."
-            android:textSize="14sp"
-            android:layout_marginBottom="24dp"
-            android:textColor="#999999" />
+    <!-- Port Field -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Server Port"
+        android:textSize="14sp"
+        android:textColor="#000000"
+        android:layout_marginBottom="4dp" />
 
-        <!-- Server IP Input -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Server IP Address"
-            android:layout_marginBottom="16dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+    <EditText
+        android:id="@+id/serverPortInput"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:hint="e.g., 3500"
+        android:inputType="number"
+        android:padding="16dp"
+        android:background="@android:drawable/editbox_background"
+        android:textColor="#000000"
+        android:textColorHint="#999999"
+        android:layout_marginBottom="24dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etServerIp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:maxLines="1" />
+    <Button
+        android:id="@+id/testConnectionButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test Connection"
+        android:layout_marginBottom="12dp" />
 
-        </com.google.android.material.textfield.TextInputLayout>
+    <Button
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save &amp; Continue" />
 
-        <!-- Server Port Input -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Server Port"
-            android:layout_marginBottom="16dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etServerPort"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:text="3500"
-                android:maxLines="1" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Test Connection Button -->
-        <Button
-            android:id="@+id/btnTestConnection"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="Test Connection"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-        <!-- Status Text -->
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="14sp"
-            android:textAlignment="center"
-            android:layout_marginBottom="24dp"
-            android:minHeight="20dp"
-            android:textColor="#666666" />
-
-        <!-- Save Button -->
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="Save &amp; Continue"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:enabled="true" />
-
-        <!-- Info Text -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="⚠ Make sure your VPS server is running before testing.\n\n✓ You can change these settings later from the app menu."
-            android:textSize="12sp"
-            android:layout_marginTop="24dp"
-            android:textColor="#999999"
-            android:lineSpacingExtra="4dp" />
-
-    </LinearLayout>
-
-</ScrollView>
+</LinearLayout>
